@@ -1,7 +1,8 @@
 import "reflect-metadata";
 import express from "express";
-import { createConnection } from "typeorm"
-import UserRouter from "./users/user.controller"
+import { createConnection } from "typeorm";
+import UserRouter from "./users/user.controller";
+import UserEntity from "./users/user.entity";
 
 const app = express();
 
@@ -29,7 +30,7 @@ function startServer() {
     username: DBUSER,
     password: DBPASSWORD,
     database: DB,
-    entities: [],
+    entities: [UserEntity],
     synchronize: true,
     logging: false,
   })
@@ -49,4 +50,3 @@ function startServer() {
 
 // Creating connection and then starting server
 startServer();
-
