@@ -2,6 +2,7 @@ import {
   CreateUserPayload,
   FindUserByIdPayload,
   UserServiceResponse,
+  LoginUserByEmailPayload,
   RemoveUserPayload,
 } from "./user.dto";
 import UserEntity from "./user.entity";
@@ -22,6 +23,20 @@ const UserService = {
     const user = await UserEntity.findOne({ id: payload.id });
     if (!user) return new UserServiceResponse(false, "User Not Found!", null);
     return new UserServiceResponse(true, "User Found", {
+      ...user,
+      password: undefined,
+    });
+  },
+
+  async getUserLoginCheckByEmail(
+    payload: LoginUserByEmailPayload
+  ): Promise<UserServiceResponse> {
+    const user = await UserEntity.findOne({ email: payload.email });
+    if (!user) return new UserServiceResponse(false, "User Not Found!", null);
+    const result = await user.comparePassword(payload.password);
+    if (!result)
+      return new UserServiceResponse(false, "Incorect Password!", null);
+    return new UserServiceResponse(true, "User matched!", {
       ...user,
       password: undefined,
     });

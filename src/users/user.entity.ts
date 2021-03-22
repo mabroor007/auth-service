@@ -1,5 +1,6 @@
 import {
-  BaseEntity, BeforeInsert,
+  BaseEntity,
+  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -54,3 +55,11 @@ export default class UsersEntity extends BaseEntity {
     return await bcrypt.compare(attempt, this.password);
   }
 }
+
+//export async function comparePassword(
+  //attempt: string,
+  //hash: string
+//): Promise<boolean> {
+  //return await bcrypt.compare(attempt, hash);
+//}
+

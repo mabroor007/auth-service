@@ -1,96 +1,145 @@
+import { SimpleConsoleLogger } from "typeorm";
 import validator from "validator";
 import UsersEntity from "./user.entity";
 
 class UsersValidator {
-  err: string[] = [];
-  async validateId(id: string, db: boolean) {
-    if (!isString(id)) this.err.push("id must be a string!");
+  async validateId(
+    id: string,
+    db: boolean,
+    err: string[] = [],
+    combine: boolean = false
+  ): Promise<ValidationResult | undefined> {
+    if (!isString(id)) err.push("id must be a string!");
     if (db) {
       const res = await UsersEntity.findOne({ id });
-      if (!res) this.err.push("No user found of this id!");
+      if (!res) err.push("No user found of this id!");
     }
-    if (!validator.isUUID(id)) this.err.push("Invalid UserId");
-    return this.getResults("id");
+    if (!validator.isUUID(id)) err.push("Invalid UserId");
+    if (!combine) return this.getResults("id", err);
   }
 
-  validateName(name: string): ValidationResult {
-    if (!isString(name)) this.err.push("Name must be a string!");
+  validateName(
+    name: string,
+    err: string[] = [],
+    combine: boolean = false
+  ): ValidationResult | undefined {
+    if (!isString(name)) err.push("Name must be a string!");
     if (name.length < 8)
-      this.err.push("Minimum length of name should be 8 character!");
+      err.push("Minimum length of name should be 8 character!");
     if (name.length > 30)
-      this.err.push("Maximum length of name should be 30 character!");
-    return this.getResults("name");
+      err.push("Maximum length of name should be 30 character!");
+    if (!combine) return this.getResults("name", err);
   }
 
-  validateUserName(userName: string) {
-    if (!isString(userName)) this.err.push("userName must be a string!");
+  validateUserName(
+    userName: string,
+    err: string[] = [],
+    combine: boolean = false
+  ): ValidationResult | undefined {
+    if (!isString(userName)) err.push("userName must be a string!");
     if (userName.length < 8)
-      this.err.push("Minimum length of userName should be 8 character!");
+      err.push("Minimum length of userName should be 8 character!");
     if (userName.length > 30)
-      this.err.push("Maximum length of userName should be 30 character!");
-    return this.getResults("userName");
+      err.push("Maximum length of userName should be 30 character!");
+    if (!combine) return this.getResults("userName", err);
   }
 
-  validateEmail(email: string) {
-    if (!isString(email)) this.err.push("Email must be a string!");
-    if (!validator.isEmail(email)) this.err.push("Invalid Email!");
+  async validateEmail(
+    email: string,
+    db: boolean,
+    err: string[] = [],
+    combine: boolean = false
+  ): Promise<ValidationResult | undefined> {
+    if (!isString(email)) err.push("Email must be a string!");
+    if (!validator.isEmail(email)) err.push("Invalid Email!");
+    if (db) {
+      const alreadyRegisteredUser = await UsersEntity.findOne({ email });
+      if (alreadyRegisteredUser)
+        err.push("User with this Email Already Exists!");
+    }
 
-    return this.getResults("email");
+    if (!combine) return this.getResults("email", err);
   }
 
-  validatePassword(password: string) {
-    if (!isString(password)) this.err.push("Password must be a string!");
+  validatePassword(
+    password: string,
+    err: string[] = [],
+    combine: boolean = false
+  ): ValidationResult | undefined {
+    if (!isString(password)) err.push("Password must be a string!");
     if (!validator.isLength(password, { min: 8, max: 30 }))
-      this.err.push("Password should 8 - 30 characters long!");
+      err.push("Password should 8 - 30 characters long!");
 
-    return this.getResults("password");
+    if (!combine) return this.getResults("password", err);
   }
 
-  validateDateOfBirth(dateOfBirth: string) {
-    if (!isString(dateOfBirth)) this.err.push("DateOfBirth must be a string!");
-    if (!validator.isDate(dateOfBirth)) this.err.push("Invalid Date Should Be yyyy-mm-dd format!");
+  validateDateOfBirth(
+    dateOfBirth: string,
+    err: string[] = [],
+    combine: boolean = false
+  ): ValidationResult | undefined {
+    if (!isString(dateOfBirth)) err.push("DateOfBirth must be a string!");
+    if (!validator.isDate(dateOfBirth))
+      err.push("Invalid Date Should Be yyyy-mm-dd format!");
 
-    return this.getResults("dateOfBirth");
+    if (!combine) return this.getResults("dateOfBirth", err);
   }
 
-  validatePhone(phone: string) {
-    if (!isString(phone)) this.err.push("Phone must be a string!");
-    if (!validator.isMobilePhone(phone)) this.err.push("Invalid Phone!");
+  validatePhone(
+    phone: string,
+    err: string[] = [],
+    combine: boolean = false
+  ): ValidationResult | undefined {
+    if (!isString(phone)) err.push("Phone must be a string!");
+    if (!validator.isMobilePhone(phone)) err.push("Invalid Phone!");
 
-    return this.getResults("phone");
+    if (!combine) return this.getResults("phone", err);
   }
 
-  validateImgUrl(url: string) {
-    if (!isString(url)) this.err.push("imgUrl must be a string!");
-    if (!validator.isURL(url)) this.err.push("Invalid Url!");
-    return this.getResults("imgUrl");
+  validateImgUrl(
+    url: string,
+    err: string[] = [],
+    combine: boolean = false
+  ): ValidationResult | undefined {
+    if (!isString(url)) err.push("imgUrl must be a string!");
+    if (!validator.isURL(url)) err.push("Invalid Url!");
+    if (!combine) return this.getResults("imgUrl", err);
   }
 
-  validateAll(body: any): ValidationResult {
-    console.log(this.err);
-    this.validateImgUrl(body.imgUrl);
-    this.validatePhone(body.phone);
-    this.validateUserName(body.userName);
-    this.validateDateOfBirth(body.dateOfBirth);
-    this.validateName(body.name);
-    this.validateEmail(body.email);
-    return this.getResults("all");
+  async signUpValidator(body: any): Promise<ValidationResult> {
+    const err: string[] = [];
+    this.validateImgUrl(body.imgUrl, err, true);
+    this.validatePhone(body.phone, err, true);
+    this.validateUserName(body.userName, err, true);
+    this.validateDateOfBirth(body.dateOfBirth, err, true);
+    this.validateName(body.name, err, true);
+    await this.validateEmail(body.email, true, err, true);
+    return this.getResults("all", err);
   }
 
-  getResults(property: string) {
-    if (this.err.length > 0) {
+  loginValidator(body: any, err: string[] = []) {
+    const { email, password } = body;
+    if (!isString(email)) err.push("Email should be a string!");
+    if (!isString(password)) err.push("Password should be a string!");
+    if (email && !validator.isEmail(email)) err.push("Invalid Email!");
+
+    return this.getResults("login", err);
+  }
+
+  getResults(property: string, err: string[]) {
+    if (err.length > 0) {
       return new ValidationResult(false, "Invalid Payload!", {
         property,
-        errors: this.err,
+        errors: err,
       });
     }
     return new ValidationResult(true, "Passed Validation!", null);
   }
 }
 
-const UserValidatorInstance = new UsersValidator();
+const userValidator = new UsersValidator();
 
-export default UserValidatorInstance;
+export default userValidator;
 
 export class ValidationResult {
   constructor(
@@ -100,7 +149,8 @@ export class ValidationResult {
   ) {}
 }
 
-function isString(field: any): boolean {
+function isString(field: string): boolean {
+  if (!field) return false;
   if (typeof field !== "string") return false;
   return true;
 }

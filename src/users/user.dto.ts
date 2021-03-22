@@ -16,6 +16,11 @@ export class FindUserByUserNamePayload {
   userName: string;
 }
 
+export class LoginUserByEmailPayload {
+  email: string;
+  password: string;
+}
+
 export class RemoveUserPayload {
   id: string;
 }

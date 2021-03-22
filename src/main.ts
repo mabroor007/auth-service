@@ -3,6 +3,8 @@ import express from "express";
 import { createConnection } from "typeorm";
 import UserRouter from "./users/user.controller";
 import UserEntity from "./users/user.entity";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -13,6 +15,14 @@ const DBPASSWORD = process.env.DBPASSWORD || "pwd";
 const DBUSER = process.env.DBUSER || "postgres";
 const DB = process.env.DB || "authdb";
 const DBPORT = process.env.DBPORT || 5432;
+
+
+
+// Middleware for cross-origin
+app.use(cors({ origin: "*" }));
+
+// Middleware for parsing incoming cookies
+app.use(cookieParser())
 
 // Middleware to parse json data
 app.use(express.json());
